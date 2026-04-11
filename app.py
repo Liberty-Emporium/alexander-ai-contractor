@@ -6,6 +6,7 @@ All-in-one contractor app with real-time pricing + AI helper
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import os
 import json
+import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
@@ -13,6 +14,105 @@ app.secret_key = os.urandom(24)
 
 DATA_DIR = os.environ.get('DATA_DIR', os.path.join('/data'))
 os.makedirs(DATA_DIR, exist_ok=True)
+
+# ============== DATABASE SETUP ==============
+db_path = os.path.join(DATA_DIR, 'contractor_pro.db')
+conn = sqlite3.connect(db_path, check_same_thread=False)
+c = conn.cursor()
+
+# Create tables
+c.execute('''CREATE TABLE IF NOT EXISTS bids (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT,
+    project_type TEXT,
+    materials TEXT,
+    labor_hours REAL,
+    labor_rate REAL,
+    profit_margin REAL,
+    total_price REAL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)''')
+
+c.execute('''CREATE TABLE IF NOT EXISTS price_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT,
+    product_name TEXT,
+    price REAL,
+    store TEXT,
+    url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)''')
+
+c.execute('''CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT,
+    name TEXT,
+    category TEXT,
+    price REAL,
+    store TEXT,
+    url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)''')
+
+# User API keys - STORED IN DATABASE, NOT ENV!
+c.execute('''CREATE TABLE IF NOT EXISTS user_api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT UNIQUE,
+    qwen_key TEXT,
+    groq_key TEXT,
+    anthropic_key TEXT,
+    openai_key TEXT,
+    xai_key TEXT,
+    mistral_key TEXT,
+    active_provider TEXT DEFAULT 'qwen',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)''')
+
+conn.commit()
+
+# ============== HELPER FUNCTIONS ==============
+
+def get_user_api_keys(user_id):
+    """Get user's API keys from database"""
+    c.execute('SELECT qwen_key, groq_key, anthropic_key, openai_key, xai_key, mistral_key, active_provider FROM user_api_keys WHERE user_id = ?', (user_id,))
+    row = c.fetchone()
+    if row:
+        return {
+            'qwen_key': row[0] or '',
+            'groq_key': row[1] or '',
+            'anthropic_key': row[2] or '',
+            'openai_key': row[3] or '',
+            'xai_key': row[4] or '',
+            'mistral_key': row[5] or '',
+            'active_provider': row[6] or 'qwen'
+        }
+    return {'qwen_key': '', 'groq_key': '', 'anthropic_key': '', 'openai_key': '', 'xai_key': '', 'mistral_key': '', 'active_provider': 'qwen'}
+
+def save_user_api_keys(user_id, keys, active_provider='qwen'):
+    """Save user's API keys to database"""
+    c.execute('''INSERT OR REPLACE INTO user_api_keys 
+        (user_id, qwen_key, groq_key, anthropic_key, openai_key, xai_key, mistral_key, active_provider, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)''',
+        (user_id, keys.get('qwen_key', ''), keys.get('groq_key', ''), keys.get('anthropic_key', ''),
+         keys.get('openai_key', ''), keys.get('xai_key', ''), keys.get('mistral_key', ''), active_provider))
+    conn.commit()
+
+def get_active_ai_key(user_id):
+    """Get the active AI provider's key for this user"""
+    api_keys = get_user_api_keys(user_id)
+    provider = api_keys.get('active_provider', 'qwen')
+    
+    key_map = {
+        'qwen': api_keys.get('qwen_key', ''),
+        'groq': api_keys.get('groq_key', ''),
+        'anthropic': api_keys.get('anthropic_key', ''),
+        'openai': api_keys.get('openai_key', ''),
+        'xai': api_keys.get('xai_key', ''),
+        'mistral': api_keys.get('mistral_key', ''),
+    }
+    
+    return key_map.get(provider, ''), provider
 
 # ============== DATA FUNCTIONS ==============
 
@@ -57,17 +157,18 @@ def index():
     return render_template('index.html')
 
 @app.route('/dashboard')
-@app.route('/dashboard')
 def dashboard():
     products = load_products()
     bids = load_bids()
-    
-    # Check for API keys - always read fresh from environment
-    groq_key = os.environ.get('GROQ_API_KEY', '') or os.getenv('GROQ_API_KEY', '')
-    qwen_key = os.environ.get('QWEN_API_KEY', '') or os.getenv('QWEN_API_KEY', '')
     locations = load_locations()
     
-    # Stats
+    # Get user's API key status from database
+    user_id = session.get('user_id', 'guest')
+    api_keys = get_user_api_keys(user_id)
+    has_api_key = any([api_keys.get('qwen_key'), api_keys.get('groq_key'), 
+                      api_keys.get('anthropic_key'), api_keys.get('openai_key'),
+                      api_keys.get('xai_key'), api_keys.get('mistral_key')])
+    
     total_products = len(products)
     total_bids = len(bids)
     tracked_stores = len(locations)
@@ -76,19 +177,19 @@ def dashboard():
                           total_products=total_products,
                           total_bids=total_bids,
                           tracked_stores=tracked_stores,
-                          recent_bids=bids[-5:] if bids else [])
+                          recent_bids=bids[-5:] if bids else [],
+                          has_api_key=has_api_key,
+                          active_provider=api_keys.get('active_provider', 'qwen'))
 
 # ============== PRICE LOOKUP ==============
 
 @app.route('/prices')
 def prices():
-    """Price comparison page"""
     products = load_products()
     return render_template('prices.html', products=products)
 
 @app.route('/price-lookup', methods=['GET', 'POST'])
 def price_lookup():
-    # Handle location save
     if request.method == 'POST' and request.form.get('city'):
         city = request.form.get('city', '').strip()
         zip_code = request.form.get('zip', '').strip()
@@ -97,7 +198,6 @@ def price_lookup():
             session['zip'] = zip_code
             flash(f'Location set to {city}', 'success')
     
-    # Handle both POST and GET
     search = ''
     if request.method == 'POST' and request.form.get('search'):
         search = request.form.get('search', '').lower()
@@ -126,12 +226,10 @@ def price_lookup():
 
 @app.route('/ai-bid')
 def ai_bid():
-    """AI-powered bid creation"""
     return render_template('ai_bid.html')
 
 @app.route('/api/create-bid', methods=['POST'])
 def create_bid():
-    """Generate AI bid"""
     from ai_ceo import ceo
     
     data = request.json
@@ -155,7 +253,6 @@ Make it professional and detailed."""
     
     bid_content = ceo.think(prompt)
     
-    # Save bid
     bids = load_bids()
     bid = {
         'id': f"BID-{len(bids) + 1:04d}",
@@ -171,7 +268,6 @@ Make it professional and detailed."""
 
 @app.route('/bids')
 def list_bids():
-    """List all bids"""
     bids = load_bids()
     return render_template('bids.html', bids=bids)
 
@@ -179,12 +275,10 @@ def list_bids():
 
 @app.route('/ai-advisor')
 def ai_advisor():
-    """AI pricing advisor"""
     return render_template('ai_advisor.html')
 
 @app.route('/api/ask-advisor', methods=['POST'])
 def ask_advisor():
-    """Ask AI for pricing advice"""
     from ai_ceo import ceo
     
     data = request.json
@@ -200,17 +294,15 @@ Provide specific, actionable advice with estimated costs if applicable."""
     
     return jsonify({'answer': answer})
 
-# ============== LOCATIONS (GPS) ==============
+# ============== LOCATIONS ==============
 
 @app.route('/locations')
 def locations():
-    """Manage store locations"""
     locations = load_locations()
     return render_template('locations.html', locations=locations)
 
 @app.route('/location/add', methods=['POST'])
 def add_location():
-    """Add a store location"""
     locations = load_locations()
     
     location = {
@@ -219,7 +311,7 @@ def add_location():
         'address': request.form.get('address'),
         'city': request.form.get('city'),
         'zip': request.form.get('zip'),
-        'type': request.form.get('type'),  # lowes, home_depot, local
+        'type': request.form.get('type'),
         'lat': request.form.get('lat'),
         'lon': request.form.get('lon')
     }
@@ -233,19 +325,16 @@ def add_location():
 
 @app.route('/new-products')
 def new_products():
-    """Track new products"""
     return render_template('new_products.html')
 
 # ============== AI CEO ==============
 
 @app.route('/ceo')
 def ceo_dashboard():
-    """AI CEO for Contractor business"""
     return render_template('ceo_dashboard.html')
 
 @app.route('/api/ceo/analyze', methods=['GET'])
 def ceo_analyze():
-    """Get AI analysis"""
     from ai_ceo import ceo
     
     products = load_products()
@@ -266,6 +355,69 @@ Give recommendations on:
     
     return jsonify({'analysis': analysis})
 
+# ============== SETTINGS ==============
+
+@app.route('/settings')
+def settings():
+    tokens_used = session.get('tokens_used', 0)
+    is_admin = session.get('username') == 'admin'
+    user_id = session.get('user_id', 'guest')
+    
+    # Get user's API keys from database
+    api_keys = get_user_api_keys(user_id)
+    
+    return render_template('settings.html', 
+                         tokens_used=tokens_used, 
+                         is_admin=is_admin, 
+                         qwen_key=api_keys.get('qwen_key', ''), 
+                         groq_key=api_keys.get('groq_key', ''), 
+                         anthropic_key=api_keys.get('anthropic_key', ''), 
+                         openai_key=api_keys.get('openai_key', ''),
+                         xai_key=api_keys.get('xai_key', ''), 
+                         mistral_key=api_keys.get('mistral_key', ''),
+                         active_provider=api_keys.get('active_provider', 'qwen'))
+
+@app.route('/settings', methods=['POST'])
+def settings_save():
+    user_id = session.get('user_id', 'guest')
+    active_provider = request.form.get('active_provider', 'qwen')
+    
+    keys = {
+        'qwen_key': request.form.get('qwen_key', '').strip(),
+        'groq_key': request.form.get('groq_key', '').strip(),
+        'anthropic_key': request.form.get('anthropic_key', '').strip(),
+        'openai_key': request.form.get('openai_key', '').strip(),
+        'xai_key': request.form.get('xai_key', '').strip(),
+        'mistral_key': request.form.get('mistral_key', '').strip(),
+    }
+    
+    save_user_api_keys(user_id, keys, active_provider)
+    flash(f'API keys saved! Active provider: {active_provider}', 'success')
+    
+    return redirect(url_for('settings'))
+
+# ============== PASSWORD & LOGOUT ==============
+
+@app.route('/change-password', methods=['GET', 'POST'])
+def change_password():
+    if request.method == 'POST':
+        old_pwd = request.form.get('old_password', '')
+        new_pwd = request.form.get('new_password', '')
+        
+        if new_pwd and len(new_pwd) >= 4:
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Password must be at least 4 characters', 'error')
+    
+    return render_template('change_password.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('Logged out successfully!', 'success')
+    return redirect('/')
+
 # ============== STATIC ==============
 
 @app.route('/pricing')
@@ -278,68 +430,3 @@ def about():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-@app.route('/settings')
-def settings():
-    """User settings with token tracking"""
-    tokens_used = session.get('tokens_used', 0)
-    is_admin = session.get('username') == 'admin'
-    # Get all API keys
-    qwen_key = os.environ.get('QWEN_API_KEY', '')
-    groq_key = os.environ.get('GROQ_API_KEY', '')
-    anthropic_key = os.environ.get('ANTHROPIC_API_KEY', '')
-    openai_key = os.environ.get('OPENAI_API_KEY', '')
-    xai_key = os.environ.get('XAI_API_KEY', '')
-    mistral_key = os.environ.get('MISTRAL_API_KEY', '')
-    return render_template('settings.html', tokens_used=tokens_used, is_admin=is_admin, 
-                         qwen_key=qwen_key, groq_key=groq_key, 
-                         anthropic_key=anthropic_key, openai_key=openai_key,
-                         xai_key=xai_key, mistral_key=mistral_key)
-
-@app.route('/settings', methods=['POST'])
-def settings_save():
-    """Save API Keys"""
-    keys = {
-        'QWEN_API_KEY': request.form.get('qwen_key', '').strip(),
-        'GROQ_API_KEY': request.form.get('groq_key', '').strip(),
-        'ANTHROPIC_API_KEY': request.form.get('anthropic_key', '').strip(),
-        'OPENAI_API_KEY': request.form.get('openai_key', '').strip(),
-        'XAI_API_KEY': request.form.get('xai_key', '').strip(),
-        'MISTRAL_API_KEY': request.form.get('mistral_key', '').strip(),
-    }
-    
-    for key_name, key_value in keys.items():
-        if key_value:
-            os.environ[key_name] = key_value
-    
-    if any(keys.values()):
-        flash('API keys saved!', 'success')
-    else:
-        flash('No keys entered', 'error')
-    
-    return redirect(url_for('settings'))
-
-
-@app.route('/change-password', methods=['GET', 'POST'])
-def change_password():
-    """Change password"""
-    if request.method == 'POST':
-        old_pwd = request.form.get('old_password', '')
-        new_pwd = request.form.get('new_password', '')
-        
-        # Simple check for demo (in production, verify old password)
-        if new_pwd and len(new_pwd) >= 4:
-            flash('Password changed successfully!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Password must be at least 4 characters', 'error')
-    
-    return render_template('change_password.html')
-
-@app.route('/logout')
-def logout():
-    """Logout"""
-    session.clear()
-    flash('Logged out successfully!', 'success')
-    return redirect('/')
