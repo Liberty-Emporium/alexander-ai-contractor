@@ -189,7 +189,7 @@ def dashboard():
     locations = load_locations()
     
     # Get user's API key status from database
-    user_id = session.get('user_id', 'guest')
+    user_id = session.get('user_id', 'default')
     api_keys = get_user_api_keys(user_id)
     has_api_key = any([api_keys.get('qwen_key'), api_keys.get('groq_key'), 
                       api_keys.get('anthropic_key'), api_keys.get('openai_key'),
@@ -258,7 +258,7 @@ def ai_bid():
 def create_bid():
     from ai_ceo import AICEO
     
-    user_id = session.get('user_id', 'guest')
+    user_id = session.get('user_id', 'default')
     api_keys = get_user_api_keys(user_id)
     ceo = AICEO(api_keys, api_keys.get('active_provider', 'qwen'))
     
@@ -311,7 +311,7 @@ def ai_advisor():
 def ask_advisor():
     from ai_ceo import AICEO
     
-    user_id = session.get('user_id', 'guest')
+    user_id = session.get('user_id', 'default')
     api_keys = get_user_api_keys(user_id)
     ceo = AICEO(api_keys, api_keys.get('active_provider', 'qwen'))
     
@@ -371,7 +371,7 @@ def ceo_dashboard():
 def ceo_analyze():
     from ai_ceo import AICEO
     
-    user_id = session.get('user_id', 'guest')
+    user_id = session.get('user_id', 'default')
     api_keys = get_user_api_keys(user_id)
     ceo = AICEO(api_keys, api_keys.get('active_provider', 'qwen'))
     
@@ -399,7 +399,7 @@ Give recommendations on:
 def settings():
     tokens_used = session.get('tokens_used', 0)
     is_admin = session.get('username') == 'admin'
-    user_id = session.get('user_id', 'guest')
+    user_id = session.get('user_id', 'default')
     
     # Get user's API keys from database
     api_keys = get_user_api_keys(user_id)
@@ -417,7 +417,7 @@ def settings():
 
 @app.route('/settings', methods=['POST'])
 def settings_save():
-    user_id = session.get('user_id', 'guest')
+    user_id = session.get('user_id', 'default')
     active_provider = request.form.get('active_provider', 'qwen')
     
     keys = {
