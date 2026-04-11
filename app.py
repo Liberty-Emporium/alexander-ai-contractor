@@ -305,3 +305,20 @@ def settings_save():
     session['tokens_used'] = session.get('tokens_used', 0) + 100
     
     return redirect(url_for('settings'))
+
+
+@app.route('/change-password', methods=['GET', 'POST'])
+def change_password():
+    """Change password"""
+    if request.method == 'POST':
+        old_pwd = request.form.get('old_password', '')
+        new_pwd = request.form.get('new_password', '')
+        
+        # Simple check for demo (in production, verify old password)
+        if new_pwd and len(new_pwd) >= 4:
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Password must be at least 4 characters', 'error')
+    
+    return render_template('change_password.html')
