@@ -1,6 +1,6 @@
 """
 AI CEO for Contractor Pro
-Uses user-provided API keys from database
+Uses user-provided API keys from database - tries ALL available keys
 """
 
 import os
@@ -27,15 +27,12 @@ Be specific, helpful, and professional."""
             {"role": "user", "content": prompt}
         ]
         
-        # Try the active provider first
-        provider = self.active_provider
-        
-        # Try each provider in order of preference
-        providers = [provider] + [p for p in ['qwen', 'groq', 'anthropic', 'openai', 'xai', 'mistral'] if p != provider]
+        # Try ALL providers - use whichever has a valid key
+        providers = ['anthropic', 'qwen', 'groq', 'openai', 'xai', 'mistral']
         
         for prov in providers:
             key = self.api_keys.get(f'{prov}_key', '')
-            if not key:
+            if not key or len(key) < 10:  # Skip empty or too-short keys
                 continue
             
             try:
@@ -88,10 +85,14 @@ Be specific, helpful, and professional."""
                     if prov == 'anthropic':
                         return response.json()['content'][0]['text']
                     return response.json()['choices'][0]['message']['content']
+                else:
+                    # Key might be invalid
+                    print(f"API error for {prov}: {response.status_code} - {response.text}")
             except Exception as e:
+                print(f"Exception for {prov}: {e}")
                 continue
         
-        return "AI unavailable - configure API keys in Settings"
+        return "AI unavailable - no valid API keys found"
 
-# Default instance for backward compatibility
+# Default instance
 ceo = AICEO()
