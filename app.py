@@ -60,6 +60,10 @@ def index():
 def dashboard():
     products = load_products()
     bids = load_bids()
+    
+    # Check for API keys
+    groq_key = os.environ.get('GROQ_API_KEY', '')
+    qwen_key = os.environ.get('QWEN_API_KEY', '')
     locations = load_locations()
     
     # Stats
@@ -273,3 +277,25 @@ def about():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+@app.route('/settings')
+def settings():
+    """API Key Settings"""
+    groq_key = os.environ.get('GROQ_API_KEY', '')
+    qwen_key = os.environ.get('QWEN_API_KEY', '')
+    return render_template('settings.html', groq_key=groq_key, qwen_key=qwen_key)
+
+@app.route('/settings', methods=['POST'])
+def settings_save():
+    """Save API Keys"""
+    groq = request.form.get('groq_key', '').strip()
+    qwen = request.form.get('qwen_key', '').strip()
+    
+    if groq:
+        os.environ['GROQ_API_KEY'] = groq
+    if qwen:
+        os.environ['QWEN_API_KEY'] = qwen
+    
+    flash('API keys updated!', 'success')
+    return redirect(url_for('dashboard'))
