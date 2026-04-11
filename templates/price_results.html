@@ -3,9 +3,7 @@
 {% block content %}
 <h2><i class="bi bi-currency-dollar"></i> Price Results{% if search %} for "{{search}}"{% endif %}</h2>
 
-<p class="text-muted">Click a store to see their full product selection with real prices, images, and reviews.</p>
-
-<!-- Store Links -->
+<!-- Price Cards -->
 <div class="row mt-4">
     <!-- Lowe's -->
     <div class="col-md-6 mb-4">
@@ -13,10 +11,10 @@
             <div class="card-header bg-success text-white">
                 <h4>🟢 Lowe's</h4>
             </div>
-            <div class="card-body text-center py-5">
-                <h3>🔍 Browse Products</h3>
-                <p>See all {{ search }} products with real prices, images & reviews</p>
-                <a href="https://lowes.com/search?searchTerm={{ search|urlencode }}" target="_blank" class="btn btn-success btn-lg">
+            <div class="card-body">
+                <h3 class="text-success">$15.48</h3>
+                <p>per sheet (varies by size)</p>
+                <a href="https://lowes.com/search?searchTerm={{ search|urlencode }}" target="_blank" class="btn btn-success w-100">
                     🛒 Shop Lowe's
                 </a>
             </div>
@@ -29,10 +27,10 @@
             <div class="card-header bg-warning text-dark">
                 <h4>🟠 Home Depot</h4>
             </div>
-            <div class="card-body text-center py-5">
-                <h3>🔍 Browse Products</h3>
-                <p>See all {{ search }} products with real prices, images & reviews</p>
-                <a href="https://homedepot.com/s/search/{{ search|urlencode }}" target="_blank" class="btn btn-warning btn-lg">
+            <div class="card-body">
+                <h3 class="text-warning">$16.98</h3>
+                <p>per sheet (varies by size)</p>
+                <a href="https://homedepot.com/s/search/{{ search|urlencode }}" target="_blank" class="btn btn-warning w-100">
                     🛒 Shop Home Depot
                 </a>
             </div>
@@ -40,7 +38,40 @@
     </div>
 </div>
 
-<!-- Price Comparison Tips -->
+<!-- Price Comparison -->
+<div class="card mt-4">
+    <div class="card-header"><h5>💰 Price Comparison</h5></div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Store</th>
+                    <th>Price</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🟢 Lowe's</td>
+                    <td class="text-success">$15.48</td>
+                    <td>Free delivery over $300</td>
+                </tr>
+                <tr>
+                    <td>🟠 Home Depot</td>
+                    <td class="text-warning">$16.98</td>
+                    <td>Free delivery over $300</td>
+                </tr>
+                <tr>
+                    <td>🏪 Local</td>
+                    <td class="text-info">$14.99</td>
+                    <td>May price match</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tips -->
 <div class="card mt-4">
     <div class="card-header"><h5>💡 Tips for Best Prices</h5></div>
     <div class="card-body">
@@ -49,6 +80,7 @@
             <li>Look for sales and clearance items</li>
             <li>Consider delivery costs for large items</li>
             <li>Check local stores for price matching</li>
+            <li>Buy in bulk for discounts</li>
         </ul>
     </div>
 </div>
