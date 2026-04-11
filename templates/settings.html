@@ -72,36 +72,63 @@
             
             <!-- API Keys Section -->
             <div class="col-md-12 mt-4">
-                <h5>🔑 API Keys <small class="text-muted">(fill in the ones you want to use)</small></h5>
+                <h5>🔑 API Keys 
+                    <small class="text-muted">(fill in the ones you want to use)</small>
+                    <span class="badge bg-warning text-dark ms-2">⚠️ Change keys weekly for security</span>
+                </h5>
             </div>
             
             <div class="col-md-6 mb-3">
-                <label class="form-label"><i class="bi bi-cpu"></i> Qwen API Key</label>
+                <label class="form-label">
+                    <i class="bi bi-cpu"></i> Qwen API Key
+                    <a href="https://dashscope.console.aliyun.com/" target="_blank" class="btn btn-sm btn-outline-primary ms-2">Get Key</a>
+                    <a href="https://dashscope.console.aliyun.com/billing" target="_blank" class="btn btn-sm btn-outline-secondary">Billing</a>
+                </label>
                 <input type="password" name="qwen_key" class="form-control" value="{{ qwen_key }}" placeholder="sk-...">
                 <small class="text-muted">Alibaba Qwen - $0.20/1M tokens</small>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label"><i class="bi bi-lightning"></i> Groq API Key</label>
+                <label class="form-label">
+                    <i class="bi bi-lightning"></i> Groq API Key
+                    <a href="https://console.groq.com/keys" target="_blank" class="btn btn-sm btn-outline-primary ms-2">Get Key</a>
+                    <a href="https://console.groq.com/usage" target="_blank" class="btn btn-sm btn-outline-secondary">Billing</a>
+                </label>
                 <input type="password" name="groq_key" class="form-control" value="{{ groq_key }}" placeholder="gsk_...">
                 <small class="text-muted">Groq - Fast inference</small>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label"><i class="bi bi-brain"></i> Anthropic (Claude) API Key</label>
+                <label class="form-label">
+                    <i class="bi bi-brain"></i> Anthropic (Claude) API Key
+                    <a href="https://console.anthropic.com/keys" target="_blank" class="btn btn-sm btn-outline-primary ms-2">Get Key</a>
+                    <a href="https://console.anthropic.com/settings/usage" target="_blank" class="btn btn-sm btn-outline-secondary">Billing</a>
+                </label>
                 <input type="password" name="anthropic_key" class="form-control" value="{{ anthropic_key }}" placeholder="sk-ant-...">
                 <small class="text-muted">Claude - Best reasoning</small>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label"><i class="bi bi-chat-dots"></i> OpenAI API Key</label>
+                <label class="form-label">
+                    <i class="bi bi-chat-dots"></i> OpenAI API Key
+                    <a href="https://platform.openai.com/api-keys" target="_blank" class="btn btn-sm btn-outline-primary ms-2">Get Key</a>
+                    <a href="https://platform.openai.com/usage" target="_blank" class="btn btn-sm btn-outline-secondary">Billing</a>
+                </label>
                 <input type="password" name="openai_key" class="form-control" value="{{ openai_key }}" placeholder="sk-...">
                 <small class="text-muted">GPT-4/3.5</small>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label"><i class="bi bi-stars"></i> xAI (Grok) API Key</label>
+                <label class="form-label">
+                    <i class="bi bi-stars"></i> xAI (Grok) API Key
+                    <a href="https://console.x.ai/" target="_blank" class="btn btn-sm btn-outline-primary ms-2">Get Key</a>
+                    <a href="https://console.x.ai/billing" target="_blank" class="btn btn-sm btn-outline-secondary">Billing</a>
+                </label>
                 <input type="password" name="xai_key" class="form-control" value="{{ xai_key }}" placeholder="xai-...">
                 <small class="text-muted">Grok</small>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label"><i class="bi bi-hash"></i> Mistral API Key</label>
+                <label class="form-label">
+                    <i class="bi bi-hash"></i> Mistral API Key
+                    <a href="https://console.mistral.ai/api-keys" target="_blank" class="btn btn-sm btn-outline-primary ms-2">Get Key</a>
+                    <a href="https://console.mistral.ai/billing" target="_blank" class="btn btn-sm btn-outline-secondary">Billing</a>
+                </label>
                 <input type="password" name="mistral_key" class="form-control" value="{{ mistral_key }}" placeholder="sk-...">
                 <small class="text-muted">Mistral AI</small>
             </div>
@@ -111,6 +138,17 @@
             </div>
         </form>
     </div>
+</div>
+
+<!-- Security Warning -->
+<div class="alert alert-warning mt-4">
+    <h5>🔐 Security Tips</h5>
+    <ul>
+        <li><strong>Change keys weekly</strong> - Reduces risk if key is compromised</li>
+        <li><strong>Never share your keys</strong> - Keep them private</li>
+        <li><strong>Monitor billing</strong> - Check the billing links above regularly</li>
+        <li><strong>Keys stored securely</strong> - All keys are encrypted in our database</li>
+    </ul>
 </div>
 
 <!-- Admin Section -->
