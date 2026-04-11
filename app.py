@@ -468,3 +468,13 @@ def about():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+# DEBUG endpoint - remove in production!
+@app.route('/debug-keys')
+def debug_keys():
+    user_id = session.get('user_id', 'default')
+    api_keys = get_user_api_keys(user_id)
+    return jsonify({
+        'user_id': user_id,
+        'keys_found': {k: bool(v) for k, v in api_keys.items()},
+        'active_provider': api_keys.get('active_provider')
+    })
