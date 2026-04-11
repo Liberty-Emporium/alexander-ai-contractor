@@ -79,7 +79,7 @@ conn.commit()
 def get_encryption_key():
     secret = os.environ.get('ENCRYPTION_SECRET', 'contractor-pro-ai-default-key-2024')
     salt = b'contractor-pro-salt'
-    kdf = PBKDF2(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=480000)
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=480000)
     return base64.urlsafe_b64encode(kdf.derive(secret.encode()))
 
 def encrypt_value(value):
