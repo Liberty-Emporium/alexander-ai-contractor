@@ -83,9 +83,18 @@ def prices():
 
 @app.route('/price-lookup', methods=['GET', 'POST'])
 def price_lookup():
+    # Handle location save
+    if request.method == 'POST' and request.form.get('city'):
+        city = request.form.get('city', '').strip()
+        zip_code = request.form.get('zip', '').strip()
+        if city:
+            session['city'] = city
+            session['zip'] = zip_code
+            flash(f'Location set to {city}', 'success')
+    
     # Handle both POST and GET
     search = ''
-    if request.method == 'POST':
+    if request.method == 'POST' and request.form.get('search'):
         search = request.form.get('search', '').lower()
     else:
         search = request.args.get('search', '').lower()
