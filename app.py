@@ -57,13 +57,14 @@ def index():
     return render_template('index.html')
 
 @app.route('/dashboard')
+@app.route('/dashboard')
 def dashboard():
     products = load_products()
     bids = load_bids()
     
-    # Check for API keys
-    groq_key = os.environ.get('GROQ_API_KEY', '')
-    qwen_key = os.environ.get('QWEN_API_KEY', '')
+    # Check for API keys - always read fresh from environment
+    groq_key = os.environ.get('GROQ_API_KEY', '') or os.getenv('GROQ_API_KEY', '')
+    qwen_key = os.environ.get('QWEN_API_KEY', '') or os.getenv('QWEN_API_KEY', '')
     locations = load_locations()
     
     # Stats
