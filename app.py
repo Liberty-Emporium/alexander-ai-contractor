@@ -282,21 +282,26 @@ if __name__ == '__main__':
 
 @app.route('/settings')
 def settings():
-    """API Key Settings"""
-    groq_key = os.environ.get('GROQ_API_KEY', '')
+    """User settings with token tracking"""
+    # Load user token usage
+    tokens_used = session.get('tokens_used', 0)
+    is_admin = session.get('username') == 'admin'
     qwen_key = os.environ.get('QWEN_API_KEY', '')
-    return render_template('settings.html', groq_key=groq_key, qwen_key=qwen_key)
+    return render_template('settings.html', tokens_used=tokens_used, is_admin=is_admin, qwen_key=qwen_key)
 
 @app.route('/settings', methods=['POST'])
 def settings_save():
-    """Save API Keys"""
-    groq = request.form.get('groq_key', '').strip()
+    """Save API Keys (admin only)"""
     qwen = request.form.get('qwen_key', '').strip()
     
-    if groq:
-        os.environ['GROQ_API_KEY'] = groq
-    if qwen:
+    # Check if admin
+    if session.get('username') == 'admin' and qwen:
         os.environ['QWEN_API_KEY'] = qwen
+        flash('API key saved!', 'success')
+    else:
+        flash('Token usage updated!', 'success')
     
-    flash('API keys updated!', 'success')
-    return redirect(url_for('dashboard'))
+    # Track token usage (simple counter for demo)
+    session['tokens_used'] = session.get('tokens_used', 0) + 100
+    
+    return redirect(url_for('settings'))
