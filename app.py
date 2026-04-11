@@ -322,3 +322,10 @@ def change_password():
             flash('Password must be at least 4 characters', 'error')
     
     return render_template('change_password.html')
+
+@app.route('/logout')
+def logout():
+    """Logout"""
+    session.clear()
+    flash('Logged out successfully!', 'success')
+    return redirect('/')
