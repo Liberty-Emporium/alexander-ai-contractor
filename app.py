@@ -9,7 +9,7 @@ import json
 import base64
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import sqlite3
 from datetime import datetime
 
@@ -79,7 +79,7 @@ conn.commit()
 def get_encryption_key():
     secret = os.environ.get('ENCRYPTION_SECRET', 'contractor-pro-ai-default-key-2024')
     salt = b'contractor-pro-salt'
-    kdf = PBKDF2(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
+    kdf = PBKDF2(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=480000)
     return base64.urlsafe_b64encode(kdf.derive(secret.encode()))
 
 def encrypt_value(value):
