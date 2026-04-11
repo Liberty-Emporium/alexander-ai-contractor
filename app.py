@@ -8,8 +8,6 @@ import os
 import json
 import base64
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import sqlite3
 from datetime import datetime
 
@@ -76,11 +74,13 @@ c.execute('''CREATE TABLE IF NOT EXISTS user_api_keys (
 conn.commit()
 
 # ============== ENCRYPTION ==============
+# Simple key derivation - uses SHA256 hash of secret
 def get_encryption_key():
+    import hashlib
     secret = os.environ.get('ENCRYPTION_SECRET', 'contractor-pro-ai-default-key-2024')
-    salt = b'contractor-pro-salt'
-    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=480000)
-    return base64.urlsafe_b64encode(kdf.derive(secret.encode()))
+    # Use SHA256 to derive a 32-byte key, then encode as Fernet key
+    key_bytes = hashlib.sha256(secret.encode()).digest()
+    return base64.urlsafe_b64encode(key_bytes)
 
 def encrypt_value(value):
     if not value:
