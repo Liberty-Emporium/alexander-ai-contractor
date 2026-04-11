@@ -147,7 +147,14 @@ def load_products():
     if os.path.exists(path):
         with open(path) as f:
             return json.load(f)
-    return []
+    # Return sample data for demo
+    return [
+        {"id": 1, "name": "2x4x8 Lumber", "category": "Lumber", "price": 5.98, "store": "Lowe's", "url": "https://lowes.com"},
+        {"id": 2, "name": "Sheet of Plywood", "category": "Lumber", "price": 45.00, "store": "Home Depot", "url": "https://homedepot.com"},
+        {"id": 3, "name": "Quikrete Concrete 80lb", "category": "Concrete", "price": 5.48, "store": "Lowe's", "url": "https://lowes.com"},
+        {"id": 4, "name": "PVC Pipe 10ft 2in", "category": "Plumbing", "price": 8.98, "store": "Home Depot", "url": "https://homedepot.com"},
+        {"id": 5, "name": "Insulation R-30 15in", "category": "Insulation", "price": 45.00, "store": "Lowe's", "url": "https://lowes.com"},
+    ]
 
 def save_products(products):
     with open(os.path.join(DATA_DIR, 'products.json'), 'w') as f:
@@ -158,7 +165,69 @@ def load_bids():
     if os.path.exists(path):
         with open(path) as f:
             return json.load(f)
-    return []
+    # Return sample bids for demo
+    return [
+        {
+            "id": "BID-0001",
+            "project_type": "Deck Build",
+            "details": "12x16 wooden deck with stairs",
+            "content": """DECK BUILDING PROPOSAL
+
+Materials:
+- 2x6x16 Pressure Treated Boards: 24 @ $18.99 = $455.76
+- 4x4x12 Post: 8 @ $24.99 = $199.92
+- Deck Screws 5lb: 2 @ $45.99 = $91.98
+- Joist Hangers: 24 @ $2.49 = $59.76
+- Concrete Mix: 10 @ $5.98 = $59.80
+
+Labor:
+- Demolition: 4 hours @ $75/hr = $300
+- Framing: 16 hours @ $75/hr = $1200
+- Decking: 12 hours @ $75/hr = $900
+- Stairs: 8 hours @ $75/hr = $600
+- Finishing: 6 hours @ $75/hr = $450
+
+Subtotal Materials: $867.22
+Subtotal Labor: $3450.00
+Markup (20%): $863.44
+
+TOTAL: $5180.66
+
+Terms: 50% deposit required, balance due upon completion.""",
+            "created_at": "2026-04-10T10:30:00"
+        },
+        {
+            "id": "BID-0002",
+            "project_type": "Kitchen Remodel",
+            "details": "Full kitchen cabinet replacement and countertop",
+            "content": """KITCHEN REMODEL PROPOSAL
+
+Materials:
+- Cabinets (upper/lower set): $4500.00
+- Quartz Countertop: $2800.00
+- Faucet: $350.00
+- Sink: $450.00
+- Backsplash Tile: $600.00
+- Appliances (range, dishwasher): $2500.00
+
+Labor:
+- Demo: 12 hours @ $75/hr = $900
+- Cabinet Install: 16 hours @ $75/hr = $1200
+- Countertop Install: 8 hours @ $75/hr = $600
+- Plumbing: 6 hours @ $85/hr = $510
+- Electrical: 4 hours @ $85/hr = $340
+- Tile: 8 hours @ $75/hr = $600
+
+Subtotal Materials: $11,700.00
+Subtotal Labor: $4,150.00
+Markup (25%): $3,962.50
+
+TOTAL: $19,812.50
+
+Terms: 30% deposit, 30% at midpoint, 40% upon completion.""",
+            "created_at": "2026-04-09T14:20:00"
+        }
+    ]
 
 def save_bids(bids):
     with open(os.path.join(DATA_DIR, 'bids.json'), 'w') as f:
@@ -169,7 +238,11 @@ def load_locations():
     if os.path.exists(path):
         with open(path) as f:
             return json.load(f)
-    return []
+    # Return sample locations for demo
+    return [
+        {"id": 1, "name": "Lowe's", "address": "123 Main St", "city": "Austin", "zip": "78701", "type": "lowes", "lat": "30.2672", "lon": "-97.7431"},
+        {"id": 2, "name": "Home Depot", "address": "456 Oak Ave", "city": "Austin", "zip": "78702", "type": "home_depot", "lat": "30.2700", "lon": "-97.7500"},
+    ]
 
 def save_locations(locations):
     with open(os.path.join(DATA_DIR, 'locations.json'), 'w') as f:
