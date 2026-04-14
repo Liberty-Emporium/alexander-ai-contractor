@@ -558,3 +558,82 @@ def overseer_delete(slug):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+# ── Forgot / Reset Password ────────────────────────────────────────────────────
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    import hashlib as _hl, secrets as _sec, datetime as _dt
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        # Check if email exists across all tenants
+        found = False
+        token = _sec.token_urlsafe(24)
+        # Save reset token
+        import os as _os
+        resets_path = _os.path.join(DATA_DIR, 'password_resets.json')
+        resets = []
+        try:
+            if _os.path.exists(resets_path):
+                with open(resets_path) as f: resets = json.load(f)
+        except: pass
+        # Check tenant users
+        for store in list_client_stores():
+            upath = _os.path.join(CUSTOMERS_DIR, store['slug'], 'users.json')
+            if not _os.path.exists(upath): continue
+            with open(upath) as f:
+                users = json.load(f)
+            if email in users:
+                found = True
+                resets = [r for r in resets if r.get('email') != email]
+                resets.append({
+                    'email': email, 'token': token, 'slug': store['slug'],
+                    'expires': (_dt.datetime.now() + _dt.timedelta(hours=2)).isoformat(),
+                    'created': _dt.datetime.now().isoformat()
+                })
+                break
+        if found:
+            with open(resets_path, 'w') as f: json.dump(resets, f, indent=2)
+            flash(f'Password reset link generated. Your reset token: {token} — or visit /reset-password/{token}', 'success')
+        else:
+            # Don't reveal if email exists
+            flash('If that email is registered, a reset link has been generated.', 'info')
+        return redirect(url_for('forgot_password'))
+    return render_template('forgot_password.html', **ctx())
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    import os as _os, datetime as _dt
+    resets_path = _os.path.join(DATA_DIR, 'password_resets.json')
+    resets = []
+    try:
+        if _os.path.exists(resets_path):
+            with open(resets_path) as f: resets = json.load(f)
+    except: pass
+    reset = next((r for r in resets if r.get('token') == token), None)
+    if not reset:
+        flash('Invalid or expired reset link.', 'error')
+        return redirect(url_for('login'))
+    if _dt.datetime.fromisoformat(reset['expires']) < _dt.datetime.now():
+        flash('Reset link has expired. Please request a new one.', 'error')
+        return redirect(url_for('forgot_password'))
+    if request.method == 'POST':
+        new_pw = request.form.get('password', '').strip()
+        if len(new_pw) < 6:
+            flash('Password must be at least 6 characters.', 'error')
+            return render_template('reset_password.html', token=token, **ctx())
+        # Update password
+        slug = reset['slug']
+        email = reset['email']
+        upath = _os.path.join(CUSTOMERS_DIR, slug, 'users.json')
+        with open(upath) as f: users = json.load(f)
+        if email in users:
+            users[email]['password'] = hash_pw(new_pw)
+            with open(upath, 'w') as f: json.dump(users, f, indent=2)
+        # Remove used token
+        resets = [r for r in resets if r.get('token') != token]
+        with open(resets_path, 'w') as f: json.dump(resets, f, indent=2)
+        flash('Password updated! You can now sign in.', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', token=token, email=reset.get('email',''), **ctx())
