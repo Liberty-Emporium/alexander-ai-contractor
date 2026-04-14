@@ -243,6 +243,21 @@ def index():
 @app.route('/healthz')
 def healthz(): return 'ok'
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint."""
+    try:
+        db = get_db()
+        db.execute("SELECT 1").fetchone()
+        db_status = "ok"
+    except Exception as e:
+        db_status = f"error"
+    import json
+    status = "ok" if db_status == "ok" else "degraded"
+    return json.dumps({"status": status, "db": db_status}),            200 if status == "ok" else 503,            {"Content-Type": "application/json"}
+
+
+
 # ── Auth ───────────────────────────────────────────────────────────────────────
 @app.route('/login', methods=['GET','POST'])
 def login():
