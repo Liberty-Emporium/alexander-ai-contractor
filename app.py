@@ -803,6 +803,51 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 
 
+# ── Email / SMTP ───────────────────────────────────────────────────────────────
+
+def get_smtp_config():
+    """Load SMTP settings from env vars.
+    Set these in Railway: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM
+    """
+    return {
+        'host':     os.environ.get('SMTP_HOST', ''),
+        'port':     int(os.environ.get('SMTP_PORT', 587)),
+        'user':     os.environ.get('SMTP_USER', ''),
+        'password': os.environ.get('SMTP_PASSWORD', ''),
+        'from':     os.environ.get('SMTP_FROM', os.environ.get('SMTP_USER', 'noreply@example.com')),
+    }
+
+def send_email(to, subject, body):
+    """Send plain-text email via SMTP. Returns (True, '') or (False, error_msg).
+    If SMTP is not configured, logs to console instead (safe — never leaks to browser).
+    """
+    cfg = get_smtp_config()
+    if not cfg['host'] or not cfg['user'] or not cfg['password']:
+        # SMTP not configured — log to console only, never show token on screen
+        print(f'[EMAIL-NOOP] To: {to} | Subject: {subject}', flush=True)
+        print(f'[EMAIL-NOOP] Body: {body}', flush=True)
+        return False, 'SMTP not configured'
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        msg = MIMEText(body, 'plain', 'utf-8')
+        msg['Subject'] = subject
+        msg['From']    = cfg['from']
+        msg['To']      = to
+        if cfg['port'] == 465:
+            with smtplib.SMTP_SSL(cfg['host'], 465, timeout=15) as s:
+                s.login(cfg['user'], cfg['password'])
+                s.sendmail(cfg['from'], [to], msg.as_string())
+        else:
+            with smtplib.SMTP(cfg['host'], cfg['port'], timeout=15) as s:
+                s.ehlo(); s.starttls()
+                s.login(cfg['user'], cfg['password'])
+                s.sendmail(cfg['from'], [to], msg.as_string())
+        return True, ''
+    except Exception as e:
+        return False, str(e)
+
+
 # ── Forgot / Reset Password ────────────────────────────────────────────────────
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -838,7 +883,29 @@ def forgot_password():
                 break
         if found:
             with open(resets_path, 'w') as f: json.dump(resets, f, indent=2)
-            flash(f'Password reset link generated. Your reset token: {token} — or visit /reset-password/{token}', 'success')
+            reset_url = request.host_url.rstrip('/') + f'/reset-password/{token}'
+            send_email(
+                to=email,
+                subject='Reset Your Password',
+                body=(
+                    f"Hi,
+
+"
+                    f"A password reset was requested for your account.
+
+"
+                    f"Click this link to set a new password (valid for 2 hours):
+"
+                    f"{reset_url}
+
+"
+                    f"If you didn't request this, you can safely ignore this email.
+
+"
+                    f"— Support"
+                )
+            )
+            flash('If that email is registered, a reset link has been sent.', 'info')
         else:
             # Don't reveal if email exists
             flash('If that email is registered, a reset link has been generated.', 'info')
