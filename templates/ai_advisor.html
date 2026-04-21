@@ -28,7 +28,7 @@
 function askAdvisor() {
     document.getElementById('answer').innerHTML = '<p>Thinking...</p>';
     fetch('/api/ask-advisor', {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({question: document.getElementById('question').value})
     }).then(r => r.json()).then(data => {
