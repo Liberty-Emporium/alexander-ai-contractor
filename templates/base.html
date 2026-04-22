@@ -30,6 +30,7 @@
           --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
         }
         * { box-sizing: border-box; }
+        html,body{overflow-x:hidden;max-width:100%;}
         body { background: var(--gray-50); font-family: 'Inter', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; color: var(--gray-800); }
         .sidebar { min-height: 100vh; background: var(--gray-900); display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.06); }
         .sidebar-content { flex: 1; }
@@ -46,6 +47,16 @@
             .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
             .sidebar-overlay.show { display: block; }
         }
+    </style>
+    <style>
+    @media(max-width:768px){
+      .container-fluid>.row{flex-wrap:nowrap;overflow-x:hidden;}
+      .col-md-10{max-width:100%;overflow-x:hidden;}
+      table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
+      img{max-width:100%;height:auto;}
+      input,select,textarea{font-size:16px!important;}
+      #lang-switcher{bottom:70px;right:.75rem;}
+    }
     </style>
     {% block extra_css %}{% endblock %}
     <meta property="og:image" content="{{ request.host_url }}static/preview.png">
@@ -115,7 +126,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-10 p-4">
+            <div class="col-md-10 p-4" style="overflow-x:hidden;max-width:100%;">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
