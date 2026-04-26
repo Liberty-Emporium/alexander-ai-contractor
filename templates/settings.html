@@ -13,6 +13,8 @@
   {% endwith %}
 
   <form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
 
     <!-- ── OpenRouter API Key ──────────────────────────────────── -->
     <div class="card mb-4">

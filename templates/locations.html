@@ -9,6 +9,8 @@
             <div class="card-header"><h5>Add Store</h5></div>
             <div class="card-body">
                 <form method="POST" action="/location/add">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                     <div class="mb-2"><input type="text" name="name" class="form-control" placeholder="Store Name (e.g., Joe's Hardware)"></div>
                     <div class="mb-2"><input type="text" name="address" class="form-control" placeholder="Address"></div>
                     <div class="mb-2"><input type="text" name="city" class="form-control" placeholder="City"></div>

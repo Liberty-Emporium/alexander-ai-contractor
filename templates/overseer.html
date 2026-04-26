@@ -18,6 +18,8 @@
     <div class="card-header bg-dark text-white"><strong>➕ Create New Client</strong></div>
     <div class="card-body">
       <form method="POST" action="/overseer/client/create" class="row g-2">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <div class="col-md-3"><input class="form-control" name="store_name" placeholder="Business Name" required></div>
         <div class="col-md-3"><input class="form-control" name="contact_email" type="email" placeholder="Email" required></div>
         <div class="col-md-2"><input class="form-control" name="temp_password" placeholder="Temp Password" required></div>
@@ -54,12 +56,18 @@
             <td>{{ s.created_at[:10] if s.created_at else '—' }}</td>
             <td>
               <form method="POST" action="/overseer/client/{{ s.slug }}/impersonate" style="display:inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                 <button class="btn btn-sm btn-outline-primary">Manage</button>
               </form>
               <form method="POST" action="/overseer/client/{{ s.slug }}/suspend" style="display:inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                 <button class="btn btn-sm btn-outline-warning">{% if s.status=='active' %}Suspend{% else %}Activate{% endif %}</button>
               </form>
               <form method="POST" action="/overseer/client/{{ s.slug }}/delete" style="display:inline" onsubmit="return confirm('Delete {{ s.store_name }}?')">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                 <button class="btn btn-sm btn-outline-danger">Delete</button>
               </form>
             </td>

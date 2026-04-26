@@ -26,6 +26,8 @@
       {% endfor %}
     {% endwith %}
     <form method="POST" action="/start-trial">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <div class="field"><label>Business Name</label><input type="text" name="store_name" placeholder="Smith Contracting LLC" required autofocus></div>
       <div class="field"><label>Your Name</label><input type="text" name="contact_name" placeholder="John Smith"></div>
       <div class="field"><label>Email Address</label><input type="email" name="contact_email" placeholder="john@smithcontracting.com" required></div>
