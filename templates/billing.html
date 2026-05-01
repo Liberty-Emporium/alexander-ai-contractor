@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Billing — Contractor Pro AI{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:760px;">
+  <h1 class="fw-900 mb-1" style="font-size:2rem;color:#1a1a2e;">Billing & Subscription</h1>
+  <p class="text-muted mb-4">Manage your plan and payment details.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ 'danger' if cat=='error' else 'success' }} mb-3">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Current Plan Badge -->
+  <div class="card border-0 shadow-sm mb-4 p-4" style="border-radius:16px;background:#f0fdf4;border-left:4px solid #22c55e !important;">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:#16a34a;letter-spacing:0.08em;">Current Plan</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#14532d;">
+          {% if plan == 'pro' %}Pro — $45/mo
+          {% elif plan == 'starter' %}Starter — $20/mo
+          {% elif plan == 'trial' %}Free Trial
+          {% else %}Expired
+          {% endif %}
+        </div>
+      </div>
+      {% if plan in ('starter','pro') %}
+      <form method="POST" action="/billing/portal">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline-secondary" style="border-radius:10px;">Manage / Cancel</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Plan Cards -->
+  <div class="row g-4">
+    <!-- Starter -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow h-100 p-4 {% if plan=='starter' %}border-success{% endif %}" style="border-radius:20px;">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:#6366f1;letter-spacing:0.08em;">STARTER</div>
+        <div style="font-size:2.8rem;font-weight:900;color:#1a1a2e;line-height:1.1;">$20<span style="font-size:1rem;color:#94a3b8;font-weight:400;">/mo</span></div>
+        <p class="text-muted small mb-3">Perfect for growing contractors</p>
+        <ul class="list-unstyled mb-4" style="font-size:0.9rem;">
+          <li class="mb-2">✅ AI-powered bid generator</li>
+          <li class="mb-2">✅ Up to 25 client accounts</li>
+          <li class="mb-2">✅ Product & location tracking</li>
+          <li class="mb-2">✅ Full bid history</li>
+          <li class="mb-2">✅ Settings & data export</li>
+        </ul>
+        {% if plan == 'starter' %}
+          <span class="btn btn-success w-100 disabled" style="border-radius:12px;">✓ Current Plan</span>
+        {% elif stripe_configured %}
+          <a href="/billing/checkout/starter" class="btn btn-primary w-100 fw-bold" style="border-radius:12px;background:#6366f1;border-color:#6366f1;">Get Starter →</a>
+        {% else %}
+          <span class="btn btn-secondary w-100 disabled" style="border-radius:12px;">Stripe not configured</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Pro -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow h-100 p-4 {% if plan=='pro' %}border-success{% endif %}" style="border-radius:20px;background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:#a5b4fc;letter-spacing:0.08em;">PRO — BEST VALUE</div>
+        <div style="font-size:2.8rem;font-weight:900;line-height:1.1;">$45<span style="font-size:1rem;color:#94a3b8;font-weight:400;">/mo</span></div>
+        <p style="color:#94a3b8;" class="small mb-3">For established contractors & teams</p>
+        <ul class="list-unstyled mb-4" style="font-size:0.9rem;color:#e2e8f0;">
+          <li class="mb-2">✅ Everything in Starter</li>
+          <li class="mb-2">✅ Unlimited client accounts</li>
+          <li class="mb-2">✅ CEO dashboard & analytics</li>
+          <li class="mb-2">✅ White-label ready</li>
+          <li class="mb-2">✅ Priority support</li>
+        </ul>
+        {% if plan == 'pro' %}
+          <span class="btn btn-success w-100 disabled" style="border-radius:12px;">✓ Current Plan</span>
+        {% elif stripe_configured %}
+          <a href="/billing/checkout/pro" class="btn btn-light w-100 fw-bold" style="border-radius:12px;color:#1a1a2e;">Get Pro →</a>
+        {% else %}
+          <span class="btn btn-secondary w-100 disabled" style="border-radius:12px;">Stripe not configured</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <p class="text-muted small text-center mt-4">Payments are securely processed by Stripe. Cancel anytime.</p>
+</div>
+{% endblock %}

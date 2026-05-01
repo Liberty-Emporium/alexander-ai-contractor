@@ -1340,3 +1340,140 @@ def reset_password(token):
         flash('Password updated! You can now sign in.', 'success')
         return redirect(url_for('login'))
     return render_template('reset_password.html', token=token, email=reset.get('email',''), **ctx())
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STRIPE BILLING — Added 2026-05-01
+# Plans: Starter $20/mo · Pro $45/mo
+# ══════════════════════════════════════════════════════════════════════════════
+import stripe as _stripe
+import threading as _stripe_thread
+
+_stripe.api_key            = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_PK                  = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_WH_SECRET           = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PRICE_STARTER       = os.environ.get('STRIPE_PRICE_STARTER', 'price_1TSLMVE50C70iVkQMhu8GOOy')
+STRIPE_PRICE_PRO_PLAN      = os.environ.get('STRIPE_PRICE_PRO_PLAN', 'price_1TSLMVE50C70iVkQprNdztHs')
+
+PLAN_LIMITS = {
+    'starter': {'clients': 25,  'label': 'Starter', 'price': '$20/mo'},
+    'pro':     {'clients': 999, 'label': 'Pro',     'price': '$45/mo'},
+}
+
+def _contractor_plan(slug):
+    """Return current plan for tenant slug: 'trial' | 'starter' | 'pro' | 'expired'"""
+    cfg = load_client_config(slug) or {}
+    return cfg.get('plan', 'trial')
+
+def _set_contractor_plan(slug, plan, stripe_customer_id=None, stripe_subscription_id=None):
+    cfg = load_client_config(slug) or {}
+    cfg['plan'] = plan
+    if stripe_customer_id:
+        cfg['stripe_customer_id'] = stripe_customer_id
+    if stripe_subscription_id:
+        cfg['stripe_subscription_id'] = stripe_subscription_id
+    save_client_config(slug, cfg)
+
+@app.route('/billing')
+@login_required
+def billing():
+    slug = active_slug()
+    cfg  = load_client_config(slug) or {}
+    plan = cfg.get('plan', 'trial')
+    return render_template('billing.html',
+        plan=plan,
+        stripe_pk=STRIPE_PK,
+        plan_limits=PLAN_LIMITS,
+        stripe_configured=bool(_stripe.api_key),
+        **ctx())
+
+@app.route('/billing/checkout/<plan_name>')
+@login_required
+def billing_checkout(plan_name):
+    if plan_name not in ('starter', 'pro'):
+        flash('Invalid plan.', 'error')
+        return redirect(url_for('billing'))
+    if not _stripe.api_key:
+        flash('Stripe is not configured yet.', 'error')
+        return redirect(url_for('billing'))
+    slug  = active_slug()
+    email = session.get('username', '')
+    price_id = STRIPE_PRICE_STARTER if plan_name == 'starter' else STRIPE_PRICE_PRO_PLAN
+    base_url = request.host_url.rstrip('/')
+    try:
+        checkout = _stripe.checkout.Session.create(
+            customer_email=email,
+            payment_method_types=['card'],
+            line_items=[{'price': price_id, 'quantity': 1}],
+            mode='subscription',
+            metadata={'slug': slug, 'plan': plan_name},
+            success_url=base_url + '/billing/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=base_url + '/billing',
+        )
+        return redirect(checkout.url)
+    except Exception as e:
+        app.logger.error(f'Stripe checkout error: {e}')
+        flash('Could not start checkout. Please try again.', 'error')
+        return redirect(url_for('billing'))
+
+@app.route('/billing/success')
+@login_required
+def billing_success():
+    flash('🎉 Subscription active! Welcome to the full plan.', 'success')
+    return redirect(url_for('dashboard'))
+
+@app.route('/billing/portal', methods=['POST'])
+@login_required
+def billing_portal():
+    slug = active_slug()
+    cfg  = load_client_config(slug) or {}
+    customer_id = cfg.get('stripe_customer_id')
+    if not customer_id:
+        flash('No billing account found.', 'error')
+        return redirect(url_for('billing'))
+    try:
+        portal = _stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=request.host_url.rstrip('/') + '/billing',
+        )
+        return redirect(portal.url)
+    except Exception as e:
+        app.logger.error(f'Stripe portal error: {e}')
+        flash('Could not open billing portal.', 'error')
+        return redirect(url_for('billing'))
+
+@app.route('/webhook/stripe', methods=['POST'])
+def contractor_stripe_webhook():
+    payload = request.get_data()
+    sig     = request.headers.get('Stripe-Signature', '')
+    try:
+        if STRIPE_WH_SECRET:
+            event = _stripe.Webhook.construct_event(payload, sig, STRIPE_WH_SECRET)
+        else:
+            event = _stripe.Event.construct_from(json.loads(payload), _stripe.api_key)
+    except Exception:
+        return '', 400
+    _stripe_thread.Thread(target=_handle_contractor_stripe_event, args=(event,), daemon=True).start()
+    return '', 200
+
+def _handle_contractor_stripe_event(event):
+    etype = event['type']
+    obj   = event['data']['object']
+    if etype == 'checkout.session.completed':
+        slug     = obj.get('metadata', {}).get('slug')
+        plan     = obj.get('metadata', {}).get('plan', 'starter')
+        cust_id  = obj.get('customer')
+        sub_id   = obj.get('subscription')
+        if slug:
+            _set_contractor_plan(slug, plan, cust_id, sub_id)
+            app.logger.info(f'Contractor plan activated: slug={slug} plan={plan}')
+    elif etype == 'customer.subscription.deleted':
+        cust_id = obj.get('customer')
+        # Find tenant by customer ID and downgrade
+        for store in list_client_stores():
+            cfg = load_client_config(store['slug']) or {}
+            if cfg.get('stripe_customer_id') == cust_id:
+                cfg['plan'] = 'trial'
+                cfg['stripe_subscription_id'] = None
+                save_client_config(store['slug'], cfg)
+                break

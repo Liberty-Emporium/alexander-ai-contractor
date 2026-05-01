@@ -104,6 +104,9 @@
                         <a href="/settings" class="{% if request.path == '/settings' %}active{% endif %}">
                             <i class="bi bi-gear"></i> Settings
                         </a>
+                        <a href="/billing" class="{% if request.path == '/billing' %}active{% endif %}">
+                            <i class="bi bi-credit-card"></i> Billing
+                        </a>
                         {% if current_role == 'admin' %}
                         <a href="/overseer" class="{% if '/overseer' in request.path %}active{% endif %}" style="border-top:1px solid #333;margin-top:0.5rem;">
                             <i class="bi bi-shield-check"></i> Overseer

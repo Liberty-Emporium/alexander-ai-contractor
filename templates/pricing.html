@@ -1,31 +1,52 @@
 {% extends 'base.html' %}
 {% block title %}Pricing — Contractor Pro AI{% endblock %}
 {% block content %}
-<div class="container py-5" style="max-width:800px;">
+<div class="container py-5" style="max-width:860px;">
   <div class="text-center mb-5">
-    <h1 class="fw-900" style="font-size:2.5rem; color:#1a1a2e;">Simple, Transparent Pricing</h1>
+    <h1 class="fw-900" style="font-size:2.5rem;color:#1a1a2e;">Simple, Transparent Pricing</h1>
     <p class="text-muted fs-5">Everything you need to win more bids and run a smarter contracting business.</p>
+    <p class="text-muted small">14-day free trial &middot; No credit card required &middot; Cancel anytime</p>
   </div>
 
-  <div class="card border-0 shadow-lg text-center p-5 mb-4" style="border-radius:20px; background:linear-gradient(135deg,#1a1a2e,#0f3460); color:white;">
-    <div style="font-size:1rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#a5b4fc; margin-bottom:0.5rem;">PRO PLAN</div>
-    <div style="font-size:4rem; font-weight:900; line-height:1;">$99<span style="font-size:1.5rem; font-weight:400; color:#94a3b8;">/month</span></div>
-    <p style="color:#94a3b8; margin:0.5rem 0 2rem;">Per client &middot; Cancel anytime</p>
-    <a href="/dashboard" class="btn btn-light btn-lg fw-bold px-5" style="border-radius:12px;">Get Started →</a>
+  <div class="row g-4 mb-5">
+    <!-- Starter -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-lg h-100 p-5 text-center" style="border-radius:20px;">
+        <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;color:#6366f1;letter-spacing:0.1em;">STARTER</div>
+        <div style="font-size:3.5rem;font-weight:900;color:#1a1a2e;line-height:1.1;margin:0.5rem 0;">$20<span style="font-size:1.2rem;color:#94a3b8;font-weight:400;">/mo</span></div>
+        <p class="text-muted mb-4">Perfect for growing contractors</p>
+        <ul class="list-unstyled text-start mb-4">
+          <li class="mb-2">✅ AI-powered bid generator</li>
+          <li class="mb-2">✅ Up to 25 client accounts</li>
+          <li class="mb-2">✅ Product & location tracking</li>
+          <li class="mb-2">✅ Full bid history & export</li>
+          <li class="mb-2">✅ Real-time material pricing</li>
+        </ul>
+        <a href="/wizard" class="btn btn-outline-primary btn-lg fw-bold w-100" style="border-radius:12px;border-color:#6366f1;color:#6366f1;">Start Free Trial →</a>
+      </div>
+    </div>
+
+    <!-- Pro -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-lg h-100 p-5 text-center position-relative" style="border-radius:20px;background:linear-gradient(135deg,#1a1a2e,#0f3460);color:white;">
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#f59e0b;color:#1a1a2e;font-size:0.75rem;font-weight:800;padding:4px 16px;border-radius:20px;letter-spacing:0.05em;">MOST POPULAR</div>
+        <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;color:#a5b4fc;letter-spacing:0.1em;">PRO</div>
+        <div style="font-size:3.5rem;font-weight:900;line-height:1.1;margin:0.5rem 0;">$45<span style="font-size:1.2rem;color:#94a3b8;font-weight:400;">/mo</span></div>
+        <p style="color:#94a3b8;" class="mb-4">For established contractors & teams</p>
+        <ul class="list-unstyled text-start mb-4" style="color:#e2e8f0;">
+          <li class="mb-2">✅ Everything in Starter</li>
+          <li class="mb-2">✅ Unlimited client accounts</li>
+          <li class="mb-2">✅ CEO dashboard & analytics</li>
+          <li class="mb-2">✅ White-label ready</li>
+          <li class="mb-2">✅ Priority support</li>
+        </ul>
+        <a href="/wizard" class="btn btn-light btn-lg fw-bold w-100" style="border-radius:12px;color:#1a1a2e;">Start Free Trial →</a>
+      </div>
+    </div>
   </div>
 
-  <div class="card border-0 shadow p-4" style="border-radius:16px;">
-    <h5 class="fw-bold mb-3" style="color:#1a1a2e;">Everything included:</h5>
-    <ul class="list-unstyled" style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
-      <li>✅ AI-powered bid generator</li>
-      <li>✅ Real-time material pricing</li>
-      <li>✅ Project management tools</li>
-      <li>✅ AI cost analysis & advisor</li>
-      <li>✅ Unlimited bids & projects</li>
-      <li>✅ Location-based pricing</li>
-      <li>✅ AI CEO assistant</li>
-      <li>✅ New product sourcing</li>
-    </ul>
+  <div class="text-center text-muted small">
+    All plans include a 14-day free trial. After trial, subscribe from your dashboard to keep access.
   </div>
 </div>
 {% endblock %}
