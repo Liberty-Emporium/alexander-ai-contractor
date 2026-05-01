@@ -1,5 +1,25 @@
 {% extends "base.html" %}
 {% block title %}My Bids{% endblock %}
+{% block help_content %}
+<h3>What is this page?</h3>
+<p>My Bids is your complete history of every bid you've created. Track status, follow up on open bids, and analyze what's winning.</p>
+<h3>Bid Statuses</h3>
+<ul>
+  <li><strong>Draft</strong> — created but not sent to client yet</li>
+  <li><strong>Sent</strong> — client has received it, waiting for response</li>
+  <li><strong>Won</strong> — job awarded, get to work</li>
+  <li><strong>Lost</strong> — client went with someone else</li>
+  <li><strong>Expired</strong> — bid window closed with no response</li>
+</ul>
+<h3>Following Up to Win More Jobs</h3>
+<ul>
+  <li>Follow up on <strong>Sent</strong> bids after 48 hours — a quick "Any questions?" message doubles close rates</li>
+  <li>When a bid is <strong>Lost</strong>, ask the client why — pricing feedback improves future bids</li>
+  <li>Click any bid to view, edit, or download it as a PDF to send to the client</li>
+</ul>
+<div class="help-tip">Review your Won vs Lost ratio monthly. If you're losing more than 50%, your pricing may be off — use the AI Pricing Advisor to recalibrate.</div>
+{% endblock %}
+{% block content %}
 {% block content %}
 <h2><i class="bi bi-list-check"></i> My Bids</h2>
 

@@ -1,5 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Price Lookup{% endblock %}
+{% block help_content %}
+<h3>What is this page?</h3>
+<p>Price Lookup gives you instant regional pricing for labor and materials — searchable by trade, task type, and location. Use it to price any line item accurately.</p>
+<h3>How to Use It</h3>
+<ul>
+  <li>Search by task: "drywall installation", "electrical outlet", "tile floor"</li>
+  <li>Select your state or region — prices adjust to local labor markets</li>
+  <li>Results show: low / mid / high range and unit (per sq ft, per hour, per unit)</li>
+  <li>Use mid-range as your baseline unless your market commands premium rates</li>
+</ul>
+<h3>Building Accurate Bids</h3>
+<ul>
+  <li>Look up every line item in your bid here before setting the final price</li>
+  <li>Add 10-15% to material costs for waste, delivery, and contingency</li>
+  <li>Your labor rate = price lookup rate × your efficiency factor (faster workers = higher margin)</li>
+</ul>
+<div class="help-tip">Save your most-used price lookups as bookmarks — flooring, drywall, painting are your bread-and-butter lookups if you're a general contractor.</div>
+{% endblock %}
+{% block content %}
 {% block content %}
 <h2><i class="bi bi-currency-dollar"></i> Compare Prices</h2>
 
